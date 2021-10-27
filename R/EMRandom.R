@@ -106,6 +106,61 @@ EMMbeta.random = function(X, alpha, W, beta, comp.zkz.e.list,
   return(beta.new)
 }
 
+## With Random Effects, M-Step for ww
+#' ECM: M-Step for realization of random effects \code{ww}.
+#'
+#' @param X A N*P matrix of numerical covariates.
+#' @param alpha A g*P matrix of logit regression coefficients (from last iteration).
+#' @param t A list of L matrices, where matrix l is a N*Sl matrix of 0 and 1's,
+#'          indicating the known clustering of the observations with respect to the l-th random effect.
+#' @param ww A list of L vectors of old realization of random effects.
+#'           The l-th vector is of length Sl, representing the Sl clusters of the l-th random effect.
+#' @param beta A g*L matrix of random effect coefficients (from last iteration).
+#' @param comp.zkz.e.list An object returned by \code{EMEzkz}.
+#' @param ww.iter.max Numeric: maximum number of iterations.
+#'
+#' @return \code{ww.new} Updated realization of random effects.
+#'
+#' @importFrom matrixStats rowLogSumExps
+#'
+#' @keywords internal
+#'
+#' @export EMMww.random
+EMMww.random = function(X, alpha, t, ww, beta, comp.zkz.e.list, ww.iter.max)
+{
+  comp.zpzk = XPlusYColTimesZ(comp.zkz.e.list$z.e.obs, comp.zkz.e.list$z.e.lat, comp.zkz.e.list$k.e)
+  # comp.zkz.e.list$z.e.obs + sweep(comp.zkz.e.list$z.e.lat, 1, comp.zkz.e.list$k.e, FUN = "*", check.margin = FALSE)
+
+  sample.size.n = nrow(X)
+  n.rand.l = length(ww)
+  n.comp = nrow(alpha)
+  iter = array(0, dim = c(n.rand.l, 1))
+  ww.new = ww
+  ww.old = ww
+  W.new = ProduceW(t, ww.new) # ProduceW from last iteration
+  comp.zpzk.marg = apply(comp.zkz.e.list$z.e.obs, 1, sum)
+
+  for (l in 1:n.rand.l)
+  {
+    tl = t[[l]]
+    ww.old[[l]] <- ww.new[[l]] - Inf
+
+    while ((iter[l]<=ww.iter.max)&(sum((ww.old[[l]]-ww.new[[l]])^2)>10^(-8))) # Stopping criteria: (ww.iter.max) iterations, or small difference
+    {
+      ww.old[[l]] = ww.new[[l]] # keeping all other wwl's unchanged; keep track of last iteration
+      W.new[,l] = tl%*%ww.new[[l]] # minimal update to W: only changes the l-th column
+      gate.body = tcrossprod(X,alpha) + tcrossprod(W.new,beta)
+      pp = exp(gate.body-rowLogSumExps(gate.body))
+      dQ = EMwwdQ(comp.zpzk, pp, beta[,l], tl, ww.new[[l]]) # ww has no penalty; its prior has been included in the M-step
+      dQ2 = EMwwdQ2(pp, beta[,l], tl)
+
+      ww.new[[l]] = c(ww.new[[l]] + crossprod(dQ, chol2inv(chol(-dQ2))))
+      iter[l] = iter[l]+1
+    }
+  }
+
+  return(ww.new)
+}
 
 #' @keywords internal
 EM_E_z_obs <- function(gate_expert_ll_comp, gate_expert_ll) {
