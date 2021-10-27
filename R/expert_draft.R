@@ -5,7 +5,7 @@
 ######################################################################################
 distribution.params_init <- function(y){
   # Estimate all the parameters that needed for further calculation
-  list() # Tha named list contained all the parameters of distribution
+  list() # The named list contained all the parameters of distribution
 }
 
 distribution.exposurize <- function(params, exposure){
@@ -15,7 +15,7 @@ distribution.exposurize <- function(params, exposure){
 
 distribution.set_params <- function(params){
   #Check the parameters are valid for distribution
-  params # The paramsters after validation check
+  params # The parameters after validation check
 }
 
 ######################################################################################
@@ -83,7 +83,7 @@ distribution.quantile <- function(params, p) {
 
 # ATTENTION: ONLY need to implement for continuous function
 distribution.lev <- function(params, u) {
- # Limited Expected Value 
+ # Limited Expected Value
 }
 
 ######################################################################################
