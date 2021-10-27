@@ -50,7 +50,7 @@ sim_exposurize_model <- function(expert_matrix, exposure_list, selected_index) {
 #' @param alpha (`matrix`)
 #' A g * P matrix. Logit regression coefficients.
 #' @param x (`matrix`)
-#' An N * P covariate matrix, where N is sample size. The first column MUST be 1
+#' A N * P covariate matrix, where N is sample size. The first column MUST be 1
 #' for an intercept term.
 #' @param expert_matrix (`ExpertMatrix`)
 #' A D*g expert matrix.
@@ -99,3 +99,45 @@ sim_dataset <- function(alpha, x, expert_matrix = NULL, comp_dist, params_list,
   return( simulations ) # <- what is going on here
 }
 
+#' With random effects, generate the simulations of the expert_matrix
+#'
+#' @param alpha (`matrix`)
+#' A g * P matrix. Logit regression coefficients.
+#' @param x (`matrix`)
+#' A N * P covariate matrix, where N is sample size. The first column MUST be 1
+#' for an intercept term.
+#' @param beta (`matrix`)
+#' A g * L matrix. Random effect coefficients.
+#' @param W (`matrix`)
+#' A N * L random effect matrix, where N is sample size, L is number of random effects.
+#' @param expert_matrix (`ExpertMatrix`)
+#' A D * g expert matrix.
+#' @param comp_dist (`matrix`)
+#' A D * g string matrix, representing the name of expert functions.
+#' @param params_list (`matrix`)
+#' A D * g matrix of lists, representing the parameters of expert functions.
+#' @param exposure
+#' A N*1 vector that contain the exposure value for each column in expert_matrix
+#'
+#' @return A N*D simulation matrix of expert_matrix.
+#'
+#' @export
+#'
+#' @examples
+#' # Examples to be written
+
+sim_mixed_dataset <- function(alpha, x, beta, w, expert_matrix = NULL, comp_dist, params_list,
+                              exposure = rep(1.0, dim(x)[1])) {
+  if(is.null(expert_matrix)){
+    if(missing(comp_dist) | missing(params_list)){
+      stop("At least one of expert_matrix and (comp_dist + params_list) should be provided.")
+    }
+    expert_matrix = ExpertMatrix$new(comp_dist, params_list)
+  }
+
+  probs = exp(GateLogitRandom(x, alpha, w, beta))
+  gating_sim = sim_logit_gating(probs)
+  selected_index = apply(gating_sim, 1, which.max)
+  simulations = sim_exposurize_model(expert_matrix, exposure, selected_index)
+  return( simulations ) # <- what is going on here
+}
