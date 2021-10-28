@@ -1,7 +1,7 @@
 #' Main fitting function of LRMoE
 #'
 #' @param Y A N by d (\code{exact_Y=T}) or N by 4d (\code{exact_Y=F}) matrix of numerics,
-#'          where N is sample size and d is the dimension of each obsevation.
+#'          where N is sample size and d is the dimension of each observation.
 #'          If the size is N by 4d, Each block of four columns should be organized as \code{(tl, yl, yu, tu)}, representing the
 #'          truncation lower bound, censoring lower bound, censoring upper bound and truncation upper bound.
 #' @param X A N*P matrix of numerics, where P is the number of covariates.
@@ -11,7 +11,7 @@
 #'                   If no initialization is provided, all coefficients are set to zero.
 #' @param comp_dist A d*g matrix of strings, which specify the component distributions to fit.
 #'                  The rows represent the dimensions of \code{Y}, while the columns represent the component distributions.
-#' @param params_list A d * g matrix of list with paramster names and values,
+#' @param params_list A d * g matrix of list with parameter names and values,
 #'                    which is the initial parameter guess for the corresponding \code{comp_dist}.
 #' @param experts_init An initialization of expert functions returned by \code{cmm_init}.
 #'                     Provide either \code{experts_init} or (\code{comp_dist} and \code{params_init}).
@@ -24,11 +24,11 @@
 #' @param pen_params A list of length d, where each element is a sublist of length g.
 #'                     Each sublist contains one numeric vector, which is the corresponding penalty for \code{params.init}.
 #' @param eps Stopping criteria for loglikelihood convergence. Default is \code{1e-03}.
-#' @param alpha_iter_max Maximum number of iterations for updating alpha. Defauls is 5.
+#' @param alpha_iter_max Maximum number of iterations for updating alpha. Default is 5.
 #' @param ecm_iter_max Maximum number of iterations for ECM. Default is 200.
 #' @param grad_jump TRUE/FALSE: whether to use an approximated gradient jump to speed up convergence.
 #' @param grad_seq How are the gradient sequence selected. Default is \code{2^(seq(8)-1)-1}.
-#' @param print_steps TRUE/FALSE: whether paramater updates are printed on screen. Default is TRUE.
+#' @param print_steps TRUE/FALSE: whether parameter updates are printed on screen. Default is TRUE.
 #'
 #'
 #' @export
