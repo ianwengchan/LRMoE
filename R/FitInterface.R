@@ -46,6 +46,12 @@ FitLRMoE = function(Y, X, alpha_init,
   Y = as.matrix(Y)
   X = as.matrix(X)
 
+  if(is.null(alpha_init)){
+    if(!is.null(comp_dist)){ # if experts_init is given, we assume alpha_init is also given
+      alpha_init = matrix(0, nrow = ncol(comp_dist), ncol = ncol(X))
+    }
+  }
+
   if(is.null(exposure)){
     exposure= rep(1, nrow(X))
     warning("No exposure provided. The default value exposure=1 is used for all observations.")
