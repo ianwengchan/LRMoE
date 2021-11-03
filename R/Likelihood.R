@@ -117,3 +117,20 @@ LogLikelihoodNotExact <- function(Y, gate, model, exposure){
     ll = ll
   ))
 }
+
+#' Calculate the log likelihood of random effects
+#'
+#' @description
+#' Calculate the log likelihood of random effects ww.
+#'
+#' @param ww (`list`)\cr
+#' A list of L vectors of realizations of random effects.
+#' The l-th vector is of length Sl, representing the Sl clusters of the l-th random effect.
+#' @keywords internal
+LogLikelihoodRandom <- function(ww){
+    result = 0
+    for(l in 1:length(ww)){
+      result = result + sum(dnorm(ww[[l]], 0, 1, log = TRUE))
+    }
+    return(result)
+  }
