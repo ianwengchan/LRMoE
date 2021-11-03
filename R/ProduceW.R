@@ -30,7 +30,7 @@ ProduceW <- function(t, ww){
 Initww <- function(t){
   ww.init <- as.list(rep(NA, length(t)))
   for(l in 1:length(t)){
-    ww.init[[l]] <- rnorm(ncol(tl[[l]]), 0, 1)
+    ww.init[[l]] <- rnorm(ncol(t[[l]]), 0, 1)
   }
   return(ww.init)
 }
