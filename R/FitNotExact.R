@@ -188,10 +188,12 @@ FitNotExactRandom = function(Y, X, alpha, t, ww, beta, model,
                   sep = ""))
     }
 
-    # M-step: ww
+    # M-step: beta and ww jointly
     ll_em_temp = ll_em
-    ww_em = EMMww.random(X, alpha_em, t, ww_em, beta_em,
-                         list(z.e.obs=z_e_obs, z.e.lat = z_e_lat, k.e = k_e), ww_iter_max)
+    temp = EMMbetaww.random(X, alpha_em, t, ww_em, beta_em, list(z.e.obs=z_e_obs, z.e.lat = z_e_lat, k.e = k_e),
+                            beta_iter_max, penalty, pen_beta)
+    beta_em = temp$beta.new
+    ww_em = temp$ww.new
     W_em = ProduceW(t, ww_em)
     gate_em = GateLogitRandom(X, alpha_em, W_em, beta_em)
     ll_em_list = LogLikelihoodNotExact(Y, gate_em, model_em, exposure)
@@ -203,31 +205,53 @@ FitNotExactRandom = function(Y, X, alpha, t, ww, beta, model,
     pct = abs(ll_em - ll_em_temp)/abs(ll_em_old) * 100
     if(print_steps){
       print(paste("Iteration: ", iter, " ,",
-                  " updating ww: ", ll_em_temp, " -> ", ll_em,
-                  " (", diff, pct, "%)",
-                  sep = ""))
-    }
-
-    # M-step: beta
-    ll_em_temp = ll_em
-    beta_em = EMMbeta.random(X, alpha_em, W_em, beta_em, list(z.e.obs=z_e_obs, z.e.lat = z_e_lat, k.e = k_e),
-                             beta_iter_max, penalty, pen_beta)
-    gate_em = GateLogitRandom(X, alpha_em, W_em, beta_em)
-    ll_em_list = LogLikelihoodNotExact(Y, gate_em, model_em, exposure)
-    ll_em_np = ll_em_list$ll + LogLikelihoodRandom(ww_em) # no penalty but has random effects
-    ll_em_penalty = model_em$get_penalty_value(penalty)
-    ll_em = ll_em_np + ll_em_penalty
-
-    diff = ifelse(ll_em - ll_em_temp>0, "+", "-")
-    pct = abs(ll_em - ll_em_temp)/abs(ll_em_old) * 100
-    if(print_steps){
-      print(paste("Iteration: ", iter, " ,",
-                  " updating beta: ", ll_em_temp, " -> ", ll_em,
+                  " updating beta and ww: ", ll_em_temp, " -> ", ll_em,
                   " (", diff, pct, "%)",
                   sep = ""))
     }
 
     ll_em_temp = ll_em
+
+    # # M-step: ww
+    # ll_em_temp = ll_em
+    # ww_em = EMMww.random(X, alpha_em, t, ww_em, beta_em,
+    #                      list(z.e.obs=z_e_obs, z.e.lat = z_e_lat, k.e = k_e), ww_iter_max)
+    # W_em = ProduceW(t, ww_em)
+    # gate_em = GateLogitRandom(X, alpha_em, W_em, beta_em)
+    # ll_em_list = LogLikelihoodNotExact(Y, gate_em, model_em, exposure)
+    # ll_em_np = ll_em_list$ll + LogLikelihoodRandom(ww_em) # no penalty but has random effects
+    # ll_em_penalty = model_em$get_penalty_value(penalty)
+    # ll_em = ll_em_np + ll_em_penalty
+    #
+    # diff = ifelse(ll_em - ll_em_temp>0, "+", "-")
+    # pct = abs(ll_em - ll_em_temp)/abs(ll_em_old) * 100
+    # if(print_steps){
+    #   print(paste("Iteration: ", iter, " ,",
+    #               " updating ww: ", ll_em_temp, " -> ", ll_em,
+    #               " (", diff, pct, "%)",
+    #               sep = ""))
+    # }
+    #
+    # # M-step: beta
+    # ll_em_temp = ll_em
+    # beta_em = EMMbeta.random(X, alpha_em, W_em, beta_em, list(z.e.obs=z_e_obs, z.e.lat = z_e_lat, k.e = k_e),
+    #                          beta_iter_max, penalty, pen_beta)
+    # gate_em = GateLogitRandom(X, alpha_em, W_em, beta_em)
+    # ll_em_list = LogLikelihoodNotExact(Y, gate_em, model_em, exposure)
+    # ll_em_np = ll_em_list$ll + LogLikelihoodRandom(ww_em) # no penalty but has random effects
+    # ll_em_penalty = model_em$get_penalty_value(penalty)
+    # ll_em = ll_em_np + ll_em_penalty
+    #
+    # diff = ifelse(ll_em - ll_em_temp>0, "+", "-")
+    # pct = abs(ll_em - ll_em_temp)/abs(ll_em_old) * 100
+    # if(print_steps){
+    #   print(paste("Iteration: ", iter, " ,",
+    #               " updating beta: ", ll_em_temp, " -> ", ll_em,
+    #               " (", diff, pct, "%)",
+    #               sep = ""))
+    # }
+    #
+    # ll_em_temp = ll_em
 
     # M-step: Expert functions
     for(d in c(1:model_em$nrow)){
