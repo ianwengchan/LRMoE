@@ -124,7 +124,7 @@ FitNotExactRandom = function(Y, X, alpha, t, ww, beta, model,
                              penalty = TRUE, pen_alpha = 5.0, pen_beta = 5.0,
                              pen_params = NULL,
                              eps = 1e-3,
-                             alpha_iter_max = 3, beta_iter_max = 3, ww_iter_max = 3,
+                             alpha_iter_max = 3, beta_iter_max = 3,
                              ecm_iter_max = 200,
                              grad_jump = TRUE, grad_seq = NULL,
                              print_steps = TRUE)
