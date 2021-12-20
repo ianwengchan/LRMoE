@@ -75,7 +75,7 @@ EMMalpha.random = function(X, alpha, W, beta, comp.zkz.e.list,
 EMMupdatebetaww.random = function(betajl, wl, dbeta, dw, dbeta2, dwdbeta, dw2)
 {
   # Entries of the inverse of Hessian
-  inverse = solve(D - 1/dbeta2*tcrossprod(dwdbeta)) # = lower_right
+  inverse = solve(dw2 - 1/dbeta2*tcrossprod(dwdbeta)) # = lower_right
   Binverse = t(dwdbeta)%*%inverse # = B%*%inverse
 
   upper_left = 1/dbeta2 + (1/dbeta2)^2 * Binverse%*%dwdbeta
