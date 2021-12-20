@@ -50,6 +50,51 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// EMwwbetadQ2
+SEXP EMwwbetadQ2(SEXP zj, SEXP pj, SEXP p, double betajl, SEXP wbetal, SEXP wl, SEXP tl);
+RcppExport SEXP _LRMoE_EMwwbetadQ2(SEXP zjSEXP, SEXP pjSEXP, SEXP pSEXP, SEXP betajlSEXP, SEXP wbetalSEXP, SEXP wlSEXP, SEXP tlSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type zj(zjSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type pj(pjSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type p(pSEXP);
+    Rcpp::traits::input_parameter< double >::type betajl(betajlSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type wbetal(wbetalSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type wl(wlSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type tl(tlSEXP);
+    rcpp_result_gen = Rcpp::wrap(EMwwbetadQ2(zj, pj, p, betajl, wbetal, wl, tl));
+    return rcpp_result_gen;
+END_RCPP
+}
+// EMwwdQ
+SEXP EMwwdQ(SEXP z, SEXP p, SEXP betal, SEXP tl, SEXP wwl);
+RcppExport SEXP _LRMoE_EMwwdQ(SEXP zSEXP, SEXP pSEXP, SEXP betalSEXP, SEXP tlSEXP, SEXP wwlSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type z(zSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type p(pSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type betal(betalSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type tl(tlSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type wwl(wwlSEXP);
+    rcpp_result_gen = Rcpp::wrap(EMwwdQ(z, p, betal, tl, wwl));
+    return rcpp_result_gen;
+END_RCPP
+}
+// EMwwdQ2
+SEXP EMwwdQ2(SEXP p, SEXP betal, SEXP tl);
+RcppExport SEXP _LRMoE_EMwwdQ2(SEXP pSEXP, SEXP betalSEXP, SEXP tlSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type p(pSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type betal(betalSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type tl(tlSEXP);
+    rcpp_result_gen = Rcpp::wrap(EMwwdQ2(p, betal, tl));
+    return rcpp_result_gen;
+END_RCPP
+}
 // sumBinomialY
 double sumBinomialY(double n, double p, double lower_, double upper_);
 RcppExport SEXP _LRMoE_sumBinomialY(SEXP nSEXP, SEXP pSEXP, SEXP lower_SEXP, SEXP upper_SEXP) {
@@ -549,6 +594,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_LRMoE_ColMaxIdx", (DL_FUNC) &_LRMoE_ColMaxIdx, 1},
     {"_LRMoE_EMalphadQ", (DL_FUNC) &_LRMoE_EMalphadQ, 4},
     {"_LRMoE_EMalphadQ2", (DL_FUNC) &_LRMoE_EMalphadQ2, 4},
+    {"_LRMoE_EMwwbetadQ2", (DL_FUNC) &_LRMoE_EMwwbetadQ2, 7},
+    {"_LRMoE_EMwwdQ", (DL_FUNC) &_LRMoE_EMwwdQ, 5},
+    {"_LRMoE_EMwwdQ2", (DL_FUNC) &_LRMoE_EMwwdQ2, 3},
     {"_LRMoE_sumBinomialY", (DL_FUNC) &_LRMoE_sumBinomialY, 4},
     {"_LRMoE_sumBinomialYObs", (DL_FUNC) &_LRMoE_sumBinomialYObs, 4},
     {"_LRMoE_sumBinomialYLat", (DL_FUNC) &_LRMoE_sumBinomialYLat, 4},
