@@ -79,7 +79,7 @@ EMMupdatebetaww.random = function(betajl, wl, dbeta, dw, dbeta2, dwdbeta, dw2)
   Binverse = t(dwdbeta)%*%inverse # = B%*%inverse
 
   upper_left = 1/dbeta2 + (1/dbeta2)^2 * Binverse%*%dwdbeta
-  upper_right = -1/dbeta * Binverse
+  upper_right = -1/dbeta2 * Binverse
 
   betajl.update = betajl - (upper_left * dbeta + upper_right%*%dw)
   wl.update = wl - (dbeta*t(upper_right) + inverse%*%dw)
@@ -119,7 +119,7 @@ EMMbetaww.random = function(X, alpha, t, ww, beta, comp.zkz.e.list,
   sample.size.n = nrow(X)
   n.rand.l = length(ww)
   n.comp = nrow(beta)
-  iter=array(0, dim = c(n.comp, 1))
+  # iter=array(0, dim = c(n.comp, 1))
   beta.new = beta
   beta.old = beta - Inf
   ww.new = ww
@@ -128,13 +128,14 @@ EMMbetaww.random = function(X, alpha, t, ww, beta, comp.zkz.e.list,
 
   for (l in 1:n.rand.l)
   {
+    iter=array(0, dim = c(n.comp, 1))
     tl = t[[l]] # retrieve the corresponding t
     # wl = ww.new[[l]] # retrieve the corresponding ww
     # ww.old[[l]] <- ww.new[[l]] - Inf
 
     for (j in 1:(n.comp-1)) # The last component's beta's are always kept at zero (reference category).
     {
-      while ((iter[j]<=beta.iter.max)&(sum((beta.old[j,]-beta.new[j,])^2)>10^(-8))) # Stopping criteria: (beta.iter.max) iterations, or small difference
+      while ((iter[j]<=beta.iter.max)&(sum((beta.old[j,l]-beta.new[j,l])^2)>10^(-8))) # Stopping criteria: (beta.iter.max) iterations, or small difference
       {
         beta.old[j,l] = beta.new[j,l]
         W.new = ProduceW(t, ww.new)
@@ -161,6 +162,11 @@ EMMbetaww.random = function(X, alpha, t, ww, beta, comp.zkz.e.list,
 
         beta.new[j,l] = (single_update$betajl.update)^2
         ww.new[[l]] = single_update$wl.update
+
+        # single_update = EMMupdatebetaww.random(beta.new[j,l], ww.new[[l]], dbeta, dw, dbeta2, dwdbeta, dw2)
+        #
+        # beta.new[j,l] = (single_update$betajl.update)
+        # ww.new[[l]] = single_update$wl.update
 
         iter[j] = iter[j] + 1
       }
