@@ -151,7 +151,7 @@ FitLRMoE = function(Y, X, alpha_init,
 #'
 #'
 #' @export
-FitMLRMoE = function(Y, X, t, alpha_init, beta_init,
+FitMLRMoE = function(Y, X, t, alpha_init, beta_init, sigma_init,
                      comp_dist, params_list, experts_init = NULL,
                      exposure = NULL,
                      exact_Y = FALSE,
