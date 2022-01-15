@@ -287,8 +287,8 @@ EMMww.random = function(X, alpha, t, ww, beta, sigma, comp.zkz.e.list, ww.iter.m
       W.new[,l] = tl%*%ww.new[[l]] # minimal update to W: only changes the l-th column
       gate.body = tcrossprod(X,alpha) + tcrossprod(W.new,beta)
       pp = exp(gate.body-rowLogSumExps(gate.body))
-      dQ = EMwwdQ(comp.zpzk, pp, beta[,l], tl, ww.new[[l]], sigmal) # ww has no penalty; its prior has been included in the M-step
-      dQ2 = EMwwdQ2(pp, beta[,l], tl, sigmal)
+      dQ = EMwwdQ(comp.zpzk, comp.zpzk.marg, pp, beta[,l], tl, ww.new[[l]], sigmal) # ww has no penalty; its prior has been included in the M-step
+      dQ2 = EMwwdQ2(comp.zpzk.marg, pp, beta[,l], tl, sigmal)
 
       ww.new[[l]] = c(ww.new[[l]] + crossprod(dQ, chol2inv(chol(-dQ2)))) # latest
       # ww.new[[l]] = c(ww.new[[l]] - crossprod(dQ, solve(dQ2)))
