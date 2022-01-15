@@ -68,8 +68,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // EMwwdQ
-SEXP EMwwdQ(SEXP z, SEXP p, SEXP betal, SEXP tl, SEXP wwl);
-RcppExport SEXP _LRMoE_EMwwdQ(SEXP zSEXP, SEXP pSEXP, SEXP betalSEXP, SEXP tlSEXP, SEXP wwlSEXP) {
+SEXP EMwwdQ(SEXP z, SEXP p, SEXP betal, SEXP tl, SEXP wwl, float sigma);
+RcppExport SEXP _LRMoE_EMwwdQ(SEXP zSEXP, SEXP pSEXP, SEXP betalSEXP, SEXP tlSEXP, SEXP wwlSEXP, SEXP sigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -78,20 +78,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< SEXP >::type betal(betalSEXP);
     Rcpp::traits::input_parameter< SEXP >::type tl(tlSEXP);
     Rcpp::traits::input_parameter< SEXP >::type wwl(wwlSEXP);
-    rcpp_result_gen = Rcpp::wrap(EMwwdQ(z, p, betal, tl, wwl));
+    Rcpp::traits::input_parameter< float >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(EMwwdQ(z, p, betal, tl, wwl, sigma));
     return rcpp_result_gen;
 END_RCPP
 }
 // EMwwdQ2
-SEXP EMwwdQ2(SEXP p, SEXP betal, SEXP tl);
-RcppExport SEXP _LRMoE_EMwwdQ2(SEXP pSEXP, SEXP betalSEXP, SEXP tlSEXP) {
+SEXP EMwwdQ2(SEXP p, SEXP betal, SEXP tl, double sigma);
+RcppExport SEXP _LRMoE_EMwwdQ2(SEXP pSEXP, SEXP betalSEXP, SEXP tlSEXP, SEXP sigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< SEXP >::type p(pSEXP);
     Rcpp::traits::input_parameter< SEXP >::type betal(betalSEXP);
     Rcpp::traits::input_parameter< SEXP >::type tl(tlSEXP);
-    rcpp_result_gen = Rcpp::wrap(EMwwdQ2(p, betal, tl));
+    Rcpp::traits::input_parameter< double >::type sigma(sigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(EMwwdQ2(p, betal, tl, sigma));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -595,8 +597,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_LRMoE_EMalphadQ", (DL_FUNC) &_LRMoE_EMalphadQ, 4},
     {"_LRMoE_EMalphadQ2", (DL_FUNC) &_LRMoE_EMalphadQ2, 4},
     {"_LRMoE_EMwwbetadQ2", (DL_FUNC) &_LRMoE_EMwwbetadQ2, 7},
-    {"_LRMoE_EMwwdQ", (DL_FUNC) &_LRMoE_EMwwdQ, 5},
-    {"_LRMoE_EMwwdQ2", (DL_FUNC) &_LRMoE_EMwwdQ2, 3},
+    {"_LRMoE_EMwwdQ", (DL_FUNC) &_LRMoE_EMwwdQ, 6},
+    {"_LRMoE_EMwwdQ2", (DL_FUNC) &_LRMoE_EMwwdQ2, 4},
     {"_LRMoE_sumBinomialY", (DL_FUNC) &_LRMoE_sumBinomialY, 4},
     {"_LRMoE_sumBinomialYObs", (DL_FUNC) &_LRMoE_sumBinomialYObs, 4},
     {"_LRMoE_sumBinomialYLat", (DL_FUNC) &_LRMoE_sumBinomialYLat, 4},
