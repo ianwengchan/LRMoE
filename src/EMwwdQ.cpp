@@ -24,7 +24,7 @@ SEXP EMwwdQ(SEXP z, SEXP p, SEXP betal, SEXP tl, SEXP wwl, float sigma) {
 
   for(int i=0; i<zz.nrow(); i++){
     // i=1,...,N policyholders
-    temp(i) = sum(zz(i,_)*(1-pp(i,_))*bbetal); // sum over j's
+    temp(i) = sum((zz(i,_)-pp(i,_))*bbetal); // sum over j's
   }
   for(int s=0; s<wwwl.size(); s++){
     // s=1,...,Sl clusters for l-th random effect
