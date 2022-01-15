@@ -26,7 +26,7 @@ FitLRMoE(
 }
 \arguments{
 \item{Y}{A N by d (\code{exact_Y=T}) or N by 4d (\code{exact_Y=F}) matrix of numerics,
-where N is sample size and d is the dimension of each obsevation.
+where N is sample size and d is the dimension of each observation.
 If the size is N by 4d, Each block of four columns should be organized as \code{(tl, yl, yu, tu)}, representing the
 truncation lower bound, censoring lower bound, censoring upper bound and truncation upper bound.}
 
@@ -40,7 +40,7 @@ If no initialization is provided, all coefficients are set to zero.}
 \item{comp_dist}{A d*g matrix of strings, which specify the component distributions to fit.
 The rows represent the dimensions of \code{Y}, while the columns represent the component distributions.}
 
-\item{params_list}{A d * g matrix of list with paramster names and values,
+\item{params_list}{A d * g matrix of list with parameter names and values,
 which is the initial parameter guess for the corresponding \code{comp_dist}.}
 
 \item{experts_init}{An initialization of expert functions returned by \code{cmm_init}.
@@ -61,7 +61,7 @@ Each sublist contains one numeric vector, which is the corresponding penalty for
 
 \item{eps}{Stopping criteria for loglikelihood convergence. Default is \code{1e-03}.}
 
-\item{alpha_iter_max}{Maximum number of iterations for updating alpha. Defauls is 5.}
+\item{alpha_iter_max}{Maximum number of iterations for updating alpha. Default is 5.}
 
 \item{ecm_iter_max}{Maximum number of iterations for ECM. Default is 200.}
 
@@ -69,7 +69,7 @@ Each sublist contains one numeric vector, which is the corresponding penalty for
 
 \item{grad_seq}{How are the gradient sequence selected. Default is \code{2^(seq(8)-1)-1}.}
 
-\item{print_steps}{TRUE/FALSE: whether paramater updates are printed on screen. Default is TRUE.}
+\item{print_steps}{TRUE/FALSE: whether parameter updates are printed on screen. Default is TRUE.}
 }
 \description{
 Main fitting function of LRMoE
