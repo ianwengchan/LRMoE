@@ -119,8 +119,11 @@ FitLRMoE = function(Y, X, alpha_init,
 #'                   The last row should all be zero, representing the default latent class.
 #'                   If no initialization is provided, all coefficients are set to zero.
 #' @param beta_init A g*L matrix of numerics, which contains initial guess of the random effect coefficients.
+#'                  The first row should all be one, as a control for the standard deviation.
 #'                  The last row should all be zero, representing the default latent class.
 #'                  If no initialization is provided, coefficients are generated from Uniform(-1,1).
+#' @param sigma_init A length L vector of positive numerics, where the l-th entry is the initial guess of the standard deviation of the l-th random effect.
+#'                   If no initialization is provided, all standard deviations are set to 1.
 #' @param comp_dist A d*g matrix of strings, which specify the component distributions to fit.
 #'                  The rows represent the dimensions of \code{Y}, while the columns represent the component distributions.
 #' @param params_list A d * g matrix of list with parameter names and values,
@@ -177,8 +180,13 @@ FitMLRMoE = function(Y, X, t, alpha_init, beta_init,
   n.comp = nrow(alpha_init)
 
   if(is.null(beta_init)){
-    beta_init = matrix(runif((n.comp*n.rand.l),-1,1), nrow = n.comp, ncol=n.rand.l)
+    beta_init = matrix(runif((n.comp*n.rand.l),0,2), nrow = n.comp, ncol=n.rand.l)
+    beta_init[1,] = 1
     beta_init[n.comp,] = 0
+  }
+
+  if(is.null(sigma_init)){
+    sigma_init = rep(1, n.rand.l)
   }
 
   ww_init = Initww(t)
@@ -223,7 +231,8 @@ FitMLRMoE = function(Y, X, t, alpha_init, beta_init,
 
   if(exact_Y == TRUE){
     result = FitExactRandom(Y = Y, X = X, alpha = alpha_init, t = t,
-                            ww = ww_init, beta = beta_init, model = model_guess,
+                            ww = ww_init, beta = beta_init, sigma = sigma_init,
+                            model = model_guess,
                             exposure = exposure,
                             penalty = penalty, pen_alpha = pen_alpha, pen_beta = pen_beta,
                             pen_params = pen_params,
@@ -234,7 +243,8 @@ FitMLRMoE = function(Y, X, t, alpha_init, beta_init,
                             print_steps = print_steps)
   }else{
     result = FitNotExactRandom(Y = Y, X = X, alpha = alpha_init, t = t,
-                               ww = ww_init, beta = beta_init, model = model_guess,
+                               ww = ww_init, beta = beta_init, sigma = sigma_init,
+                               model = model_guess,
                                exposure = exposure,
                                penalty = penalty, pen_alpha = pen_alpha, pen_beta = pen_beta,
                                pen_params = pen_params,
