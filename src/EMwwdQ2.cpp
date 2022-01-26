@@ -12,8 +12,8 @@ using namespace Rcpp;
 //
 
 // [[Rcpp::export]]
-SEXP EMwwdQ2(SEXP zmarg, SEXP p, SEXP betal, SEXP tl, double sigma) {
-  NumericVector zzmarg(zmarg); // length N
+SEXP EMwwdQ2(SEXP p, SEXP betal, SEXP tl, double sigma) {
+  // NumericVector zzmarg(zmarg); // length N
   NumericMatrix pp(p); // N by g matrix
   NumericVector bbetal(betal); // length g
   NumericMatrix ttl(tl); // N by Sl matrix
@@ -26,7 +26,7 @@ SEXP EMwwdQ2(SEXP zmarg, SEXP p, SEXP betal, SEXP tl, double sigma) {
   for(int i=0; i<pp.nrow(); i++){
     // i=1,...,N policyholders
     prodsq(i) = sum(pp(i,_)*bbetal); // sum over j's
-    prod(i) = zzmarg(i)*(prodsq(i)*prodsq(i) - sum(pp(i,_)*bbetal*bbetal)); // sum over j's
+    prod(i) = (prodsq(i)*prodsq(i) - sum(pp(i,_)*bbetal*bbetal)); // sum over j's
   }
   for(int j=0; j<result.nrow(); j++){
     // j=1,...,Sl clusters; not to mix up with j-th component
