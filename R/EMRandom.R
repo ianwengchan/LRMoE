@@ -253,7 +253,6 @@ EMMbeta.random = function(X, alpha, W, beta, comp.zkz.e.list,
 #' @param ww.iter.max Numeric: maximum number of iterations.
 #'
 #' @return \code{ww.new} Updated realization of random effects.
-#' @return \code{sigma.new} Updated standard deviations of random effects.
 #'
 #' @importFrom matrixStats rowLogSumExps
 #'
@@ -287,18 +286,15 @@ EMMww.random = function(X, alpha, t, ww, beta, sigma, comp.zkz.e.list, ww.iter.m
       W.new[,l] = tl%*%ww.new[[l]] # minimal update to W: only changes the l-th column
       gate.body = tcrossprod(X,alpha) + tcrossprod(W.new,beta)
       pp = exp(gate.body-rowLogSumExps(gate.body))
-      dQ = EMwwdQ(comp.zpzk, comp.zpzk.marg, pp, beta[,l], tl, ww.new[[l]], sigmal) # ww has no penalty; its prior has been included in the M-step
-      dQ2 = EMwwdQ2(comp.zpzk.marg, pp, beta[,l], tl, sigmal)
+      dQ = EMwwdQ(comp.zpzk, pp, beta[,l], tl, ww.new[[l]], sigmal) # ww has no penalty; its prior has been included in the M-step
+      dQ2 = EMwwdQ2(pp, beta[,l], tl, sigmal)
 
       ww.new[[l]] = c(ww.new[[l]] + crossprod(dQ, chol2inv(chol(-dQ2)))) # latest
       # ww.new[[l]] = c(ww.new[[l]] - crossprod(dQ, solve(dQ2)))
       iter[l] = iter[l]+1
     }
-    sigma.new[l] <- sqrt(sum(ww.new[[l]]^2) / length(ww.new[[l]]))
-    # ww.new[[l]] = (ww.new[[l]] - mean(ww.new[[l]]))/sd(ww.new[[l]])
   }
-
-  return(list(ww.new = ww.new, sigma.new = sigma.new))
+  return(ww.new)
 }
 
 
