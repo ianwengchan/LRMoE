@@ -154,8 +154,8 @@ FitExactRandom = function(Y, X, alpha, t, ww, beta, sigma, model,
   ll_em_old = -Inf
   iter = 0
 
-  # while((ll_em - ll_em_old > eps) & (iter < ecm_iter_max)){
-  while((iter < ecm_iter_max)){
+  while((ll_em - ll_em_old > eps) & (iter < ecm_iter_max)){
+  # while((iter < ecm_iter_max)){
 
     iter = iter + 1
     ll_em_np_old = ll_em_np
@@ -212,10 +212,10 @@ FitExactRandom = function(Y, X, alpha, t, ww, beta, sigma, model,
 
     # M-step: ww
     ll_em_temp = ll_em
-    temp = EMMww.random(X, alpha_em, t, ww_em, beta_em, sigma_em,
+    ww_em = EMMww.random(X, alpha_em, t, ww_em, beta_em, sigma_em,
                         list(z.e.obs=z_e_obs, z.e.lat = z_e_lat, k.e = k_e), ww_iter_max)
-    ww_em = temp$ww.new
-    sigma_em = temp$sigma.new
+    # ww_em = temp$ww.new
+    # sigma_em = temp$sigma.new
     W_em = ProduceW(t, ww_em)
     gate_em = GateLogitRandom(X, alpha_em, W_em, beta_em)
     ll_em_list = LogLikelihoodExact(Y, gate_em, model_em, exposure)
@@ -288,6 +288,9 @@ FitExactRandom = function(Y, X, alpha, t, ww, beta, sigma, model,
     beta_em = beta_em
     ww_em = ww_em
     W_em = ProduceW(t, ww_em)
+    for(l in 1:length(ww_em)){
+      sigma_em[l] <- sqrt(sum(ww_em[[l]]^2) / length(ww_em[[l]]))
+    }
     sigma_em = sigma_em
     # model_em = model_em$clone()
     gate_em = GateLogitRandom(X, alpha_em, W_em, beta_em)

@@ -189,6 +189,8 @@ FitMLRMoE = function(Y, X, t, alpha_init, beta_init, sigma_init,
     sigma_init = rep(1, n.rand.l)
   }
 
+  # if(is.null(seed)){seed = 1234}
+
   ww_init = Initww(t)
 
   if(is.null(exposure)){

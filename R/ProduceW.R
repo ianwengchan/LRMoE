@@ -28,9 +28,12 @@ ProduceW <- function(t, ww){
 #'
 #' @export Initww
 Initww <- function(t){
+  # set.seed(seed)
   ww.init <- as.list(rep(NA, length(t)))
   for(l in 1:length(t)){
-    ww.init[[l]] <- rnorm(ncol(t[[l]]), 0, 1)
+    # ww.init[[l]] <- seq(qnorm(0.1), qnorm(0.9), length.out = ncol(t[[l]]))
+    ww.init[[l]] <- qnorm(seq(0.1, 0.9, length.out = ncol(t[[l]])))
+    # ww.init[[l]] <- rnorm(ncol(t[[l]]), 0, 1)
   }
   return(ww.init)
 }

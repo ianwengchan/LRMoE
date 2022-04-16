@@ -8,3 +8,9 @@ s-9F8CCDB1
 .gitignore
 docs
 vignettes/simulatedataset_cache/*
+*.txt
+vignettes/testing.Rmd
+man/EMMalpha.random.Rd
+*.Rd
+*.Rd
+man/FitLRMoE.Rd

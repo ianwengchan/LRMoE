@@ -18,7 +18,7 @@ sim_dataset(
 A g * P matrix. Logit regression coefficients.}
 
 \item{x}{(\code{matrix})
-An N * P covariate matrix, where N is sample size. The first column MUST be 1
+A N * P covariate matrix, where N is sample size. The first column MUST be 1
 for an intercept term.}
 
 \item{expert_matrix}{(\code{ExpertMatrix})
