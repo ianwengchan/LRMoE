@@ -17,12 +17,12 @@ EMwwbetadQ2 <- function(zj, pj, p, betajl, wbetal, wl, tl) {
     .Call(`_LRMoE_EMwwbetadQ2`, zj, pj, p, betajl, wbetal, wl, tl)
 }
 
-EMwwdQ <- function(z, p, betal, tl, wwl, sigma) {
-    .Call(`_LRMoE_EMwwdQ`, z, p, betal, tl, wwl, sigma)
+EMwwdQ <- function(z, zmarg, p, betal, tl, wwl) {
+    .Call(`_LRMoE_EMwwdQ`, z, zmarg, p, betal, tl, wwl)
 }
 
-EMwwdQ2 <- function(p, betal, tl, sigma) {
-    .Call(`_LRMoE_EMwwdQ2`, p, betal, tl, sigma)
+EMwwdQ2 <- function(zmarg, p, betal, tl) {
+    .Call(`_LRMoE_EMwwdQ2`, zmarg, p, betal, tl)
 }
 
 sumBinomialY <- function(n, p, lower_, upper_) {

@@ -12,30 +12,36 @@ using namespace Rcpp;
 //
 
 // [[Rcpp::export]]
-SEXP EMwwdQ2(SEXP p, SEXP betal, SEXP tl, double sigma) {
-  // NumericVector zzmarg(zmarg); // length N
+SEXP EMwwdQ2(SEXP zmarg, SEXP p, SEXP betal, SEXP tl) {
+  NumericVector zzmarg(zmarg); // length N
   NumericMatrix pp(p); // N by g matrix
   NumericVector bbetal(betal); // length g
   NumericMatrix ttl(tl); // N by Sl matrix
-  double sd(sigma);
+  // double sd(sigma);
   NumericVector prodsq(pp.nrow()); // length N, pp*beta
   NumericVector prod(pp.nrow()); // length N
-  NumericMatrix temp(ttl.nrow(), ttl.ncol()); // N by Sl
-  NumericMatrix result(ttl.ncol(), ttl.ncol()); // Sl by Sl matrix
+  //NumericMatrix temp(ttl.nrow(), ttl.ncol()); // N by Sl
+  //NumericMatrix result(ttl.ncol(), ttl.ncol()); // Sl by Sl matrix
+  NumericVector result(ttl.ncol());; // length Sl for random effect l
 
   for(int i=0; i<pp.nrow(); i++){
     // i=1,...,N policyholders
     prodsq(i) = sum(pp(i,_)*bbetal); // sum over j's
-    prod(i) = (prodsq(i)*prodsq(i) - sum(pp(i,_)*bbetal*bbetal)); // sum over j's
+    prod(i) = zzmarg(i)*(prodsq(i)*prodsq(i) - sum(pp(i,_)*bbetal*bbetal)); // sum over j's
   }
-  for(int j=0; j<result.nrow(); j++){
-    // j=1,...,Sl clusters; not to mix up with j-th component
-    temp(_,j) = ttl(_,j) * prod;
-    for(int s=0; s<result.ncol(); s++){
-      // s=1,...,Sl clusters
-      result(j,s) = sum(temp(_,j)*ttl(_,s));
-      if(s==j) result(j,s) = result(j,s) -1.0/(sd*sd); // minus (identity divided by variance)
-    }
+  for(int s=0; s<ttl.ncol(); s++){
+    // s=1,...,Sl clusters for l-th random effect
+    result(s) = sum(ttl(_,s)*prod);
   }
   return result;
+
+  // for(int j=0; j<result.nrow(); j++){
+  //   // j=1,...,Sl clusters; not to mix up with j-th component
+  //   temp(_,j) = ttl(_,j) * prod;
+  //   for(int s=0; s<result.ncol(); s++){
+  //     // s=1,...,Sl clusters
+  //     result(j,s) = sum(temp(_,j)*ttl(_,s));
+  //     if(s==j) result(j,s) = result(j,s) -1.0/(sd*sd); // minus (identity divided by variance)
+  //   }
+  // }
 }

@@ -31,3 +31,39 @@ GateLogitRandom = function(x, alpha, w, beta)
   gate.body=tcrossprod(x,alpha)+tcrossprod(w,beta)
   return(sweep(gate.body, 1, rowLogSumExps(gate.body), FUN = "-", check.margin = FALSE))
 }
+
+
+LogitGatingEval = function(X, alpha, beta, t, ww.list)
+{
+  W = ProduceW(t, ww.list)
+  gate.body=tcrossprod(X,alpha)+tcrossprod(W,beta)
+  return(sweep(gate.body, 1, rowLogSumExps(gate.body), FUN = "-", check.margin = FALSE))
+}
+
+
+LogitGatingSim = function(X, alpha, beta, t, ww.mu.list, ww.Sigma.list)
+{
+  ww.list.sample <- as.list(rep(NA, length(ww.mu.list)))
+  for (l in 1:length(ww.mu.list)){
+    ww.list.sample[[l]] <- mvtnorm::rmvnorm(1, mean = ww.mu.list[[l]], sigma = ww.Sigma.list[[l]])
+  }
+  W <- ProduceW(t, ww.list.sample)
+  gate.body=tcrossprod(X,alpha)+tcrossprod(W,beta)
+  return(sweep(gate.body, 1, rowLogSumExps(gate.body), FUN = "-", check.margin = FALSE))
+}
+
+
+DiagMvNormal_KL = function(mu, Sigma)
+{
+  return(0.5*(-sum(log(Sigma)) + sum(Sigma) + sum(mu^2) - length(mu)))
+}
+
+
+ww_KL = function(ww.mu.list, ww.Sigma.list)
+{
+  temp = 0
+  for (l in 1:length(ww.mu.list)){
+    temp = temp + DiagMvNormal_KL(ww.mu.list[[l]], ww.Sigma.list[[l]])
+  }
+  return(temp)
+}

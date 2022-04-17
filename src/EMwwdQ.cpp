@@ -12,25 +12,25 @@ using namespace Rcpp;
 //
 
 // [[Rcpp::export]]
-SEXP EMwwdQ(SEXP z, SEXP p, SEXP betal, SEXP tl, SEXP wwl, float sigma) {
+SEXP EMwwdQ(SEXP z, SEXP zmarg, SEXP p, SEXP betal, SEXP tl, SEXP wwl) {
   NumericMatrix zz(z); // N by g
-  //NumericVector zzmarg(zmarg); // length N, comp_zpzk_marg
+  NumericVector zzmarg(zmarg); // length N, comp_zpzk_marg
   NumericMatrix pp(p); // N by g
   NumericVector bbetal(betal); // length g
   NumericMatrix ttl(tl); // N by Sl
   NumericVector wwwl(wwl); // length Sl for random effect l
-  float sd(sigma);
+  //float sd(sigma);
   NumericVector temp(zz.nrow()); // length N
   NumericVector result(wwwl.size()); // length Sl for random effect l
 
   for(int i=0; i<zz.nrow(); i++){
     // i=1,...,N policyholders
-    temp(i) = sum((zz(i,_)-pp(i,_))*bbetal); // sum over j's
+    temp(i) = sum((zz(i,_)- zzmarg(i)*pp(i,_))*bbetal); // sum over j's
   }
   for(int s=0; s<wwwl.size(); s++){
     // s=1,...,Sl clusters for l-th random effect
     result(s) = sum(ttl(_,s)*temp);
   }
-  result = result-wwwl/(sd*sd); // divided by variance
+  //result = result-wwwl/(sd*sd); // divided by variance
   return result;
 }

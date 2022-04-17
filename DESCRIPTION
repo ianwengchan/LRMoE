@@ -43,7 +43,8 @@ Imports:
     rmutil,
     expint,
     EnvStats,
-    fitdistrplus
+    fitdistrplus,
+    mvtnorm
 Suggests: knitr, rmarkdown, reshape2, testthat
 RoxygenNote: 7.1.2
 Roxygen: list(markdown = TRUE)

@@ -52,6 +52,182 @@ EMMalpha.random = function(X, alpha, W, beta, comp.zkz.e.list,
   return(alpha.new)
 }
 
+
+## With Random Effects, M-Step for alpha, beta and the Normal parameters of ww
+#' ECM: M-Step for logit regression coefficients \code{alpha}, \code{beta}, \code{mu}, \code{Sigma}.
+#'
+#' @param X A N*P matrix of numerical covariates.
+#' @param alpha A g*P matrix of old logit regression coefficients (from last iteration).
+#' @param beta A g*L matrix of random effect coefficients (from last iteration).
+#' @param t A list of L matrices, where matrix l is a N*Sl matrix of 0 and 1's,
+#'          indicating the known clustering of the observations with respect to the l-th random effect.
+#' @param comp.zkz.e.list An object returned by \code{EMEzkz}.
+#' @param ww.mu.list A list of L Normal mean vectors, each of length Sl, of random effects.
+#' @param ww.Sigma.list A list of L Normal covariance matrices, each of length Sl, of random effects.
+#' @param n.sims Numeric: number of random effect simulations.
+#' @param alphabeta.iter.max Numeric: maximum number of iterations to update alpha and beta.
+#' @param ww.iter.max Numeric: maximum number of iterations to update random effect parameters.
+#' @param penalty TRUE/FALSE, which indicates whether penalty is applied.
+#' @param hyper.alpha A numeric of penalty applied to \code{alpha}.
+#'
+#' @return \code{alpha.new} Updated logit regression coefficients.
+#' @return \code{beta.new} Updated random effect coefficients.
+#' @return \code{ww.mu.new} Updated list of Normal mean vectors of random effects.
+#' @return \code{ww.Sigma.new} Updated list of Normal covariance matrices of random effects.
+#'
+#' @importFrom matrixStats rowLogSumExps
+#' @importFrom mvtnorm rmvnorm
+#'
+#' @keywords internal
+#'
+#' # @export EMMalphabetaww.VI
+EMMalphabetaww.VI = function(X, alpha, beta, t, comp.zkz.e.list,
+                             ww.mu.list, ww.Sigma.list, n.sims,
+                             alphabeta.iter.max, ww.iter.max,
+                             penalty, hyper.alpha)
+{
+  comp.zpzk = XPlusYColTimesZ(comp.zkz.e.list$z.e.obs, comp.zkz.e.list$z.e.lat, comp.zkz.e.list$k.e)
+  # comp.zkz.e.list$z.e.obs + sweep(comp.zkz.e.list$z.e.lat, 1, comp.zkz.e.list$k.e, FUN = "*", check.margin = FALSE)
+
+  sample.size.n = nrow(X)
+  n.covar.p = ncol(X)
+  n.comp = nrow(alpha)
+  iter = array(0, dim = c(n.comp, 1))
+
+  alpha.new = alpha
+  alpha.old = alpha.new - Inf
+
+  beta.new = beta
+  beta.old = beta.new - Inf
+
+  ll.old = -Inf ## look at this
+
+  comp.zpzk.marg = apply(comp.zpzk, 1, sum)
+
+  for (j in 1:(n.comp-1)) # The last component's alpha's are always kept at zero (reference category).
+  {
+    while ((iter[j]<=alphabeta.iter.max)&(sum((alpha.old[j,]-alpha.new[j,])^2)>10^(-8))) # Stopping criteria: (alpha.iter.max) iterations, or small difference
+    {
+      alpha.old[j,] = alpha.new[j,]
+
+      dQdalphaj = rep(0, length(alpha.old[j,]))
+      dQdalphaj2 = matrix(0, nrow = length(alpha.old[j,]), ncol = length(alpha.old[j,]))
+
+      for (nn.sim in 1:n.sims){
+        ww.list.sample <- as.list(rep(NA, length(ww.mu.list)))
+        for (l in 1:length(ww.mu.list)){
+          ww.list.sample[[l]] <- rmvnorm(1, mean = ww.mu.list[[l]], sigma = ww.Sigma.list[[l]])
+        }
+        W <- ProduceW(t, ww.list.sample)
+
+        gate.body = tcrossprod(X,alpha.new)+tcrossprod(W,beta.new)
+        pp = exp(gate.body-rowLogSumExps(gate.body))
+        qqj = exp(rowLogSumExps(array(gate.body[,-j],dim=c(sample.size.n,n.comp-1)))-rowLogSumExps(gate.body))
+        dQdalphaj = dQdalphaj + (EMalphadQ(X, comp.zpzk[,j], comp.zpzk.marg, pp[,j]) - if(penalty){alpha.new[j,]/hyper.alpha^2} else{0})
+        # apply(sweep(X,1,comp.zpzk[,j]-comp.zpzk.marg*exp(gate.body[,j]-rowLogSumExps(gate.body)),FUN="*",check.margin=FALSE),2,sum)-if(penalty){alpha.new[j,]/hyper.alpha^2} else{0}
+        dQdalphaj2 = dQdalphaj2 + (EMalphadQ2(X, comp.zpzk.marg, pp[,j], qqj) - if(penalty){diag(1/hyper.alpha^2,nrow = n.covar.p, ncol = n.covar.p)} else{diag(10^(-7),nrow = n.covar.p, ncol = n.covar.p)})
+        # -crossprod(sweep(X,1,comp.zpzk.marg*exp(rowLogSumExps(array(gate.body[,-j],dim=c(sample.size.n,n.comp-1)))+gate.body[,j]-2*rowLogSumExps(gate.body)),FUN="*",check.margin=FALSE),X)-if(penalty){diag(1/hyper.alpha^2,nrow = n.covar.p, ncol = n.covar.p)} else{diag(10^(-7),nrow = n.covar.p, ncol = n.covar.p)}
+      }
+
+      dQdalphaj = dQdalphaj / n.sims
+      dQdalphaj2 = dQdalphaj2 / n.sims
+
+      alpha.new[j,] = alpha.new[j,] + crossprod(dQdalphaj, chol2inv(chol(-dQdalphaj2))) # -crossprod(dQ,solve(dQ2))
+      iter[j] = iter[j]+1
+    }
+  }
+
+  if (n.comp > 2){ # only update beta when there are at least 3 latent classes
+    iter = array(0, dim = c(n.comp, 1))
+
+    for (j in 2:(n.comp-1)) # The last component's beta's are always kept at zero (reference category).
+    { # The first component's beta is estimated standard deviation
+      while ((iter[j]<=alphabeta.iter.max)&(sum((beta.old[j,]-beta.new[j,])^2)>10^(-8))) # Stopping criteria: (beta.iter.max) iterations, or small difference
+      {
+        beta.old[j,] = beta.new[j,]
+
+        dQdbetaj = rep(0, length(beta.old[j,]))
+        dQdbetaj2 = matrix(0, nrow = length(beta.old[j,]), ncol = length(beta.old[j,]))
+
+        for (nn.sim in 1:n.sims){
+          ww.list.sample <- as.list(rep(NA, length(ww.mu.list)))
+          for (l in 1:length(ww.mu.list)){
+            ww.list.sample[[l]] <- rmvnorm(1, mean = ww.mu.list[[l]], sigma = ww.Sigma.list[[l]])
+          }
+          W <- ProduceW(t, ww.list.sample)
+
+          gate.body = tcrossprod(X,alpha.new)+tcrossprod(W,beta.new)
+          pp = exp(gate.body-rowLogSumExps(gate.body))
+          qqj = exp(rowLogSumExps(array(gate.body[,-j],dim=c(sample.size.n,n.comp-1)))-rowLogSumExps(gate.body))
+          dQdbetaj = dQdbetaj + EMalphadQ(W, comp.zpzk[,j], comp.zpzk.marg, pp[,j])
+          dQdbetaj2 = dQdbetaj2 + EMalphadQ2(W, comp.zpzk.marg, pp[,j], qqj)
+        }
+
+        dQdbetaj = dQdbetaj / n.sims
+        dQdbetaj2 = dQdbetaj2 / n.sims
+
+        beta.new[j,]=beta.new[j,] + crossprod(dQdbetaj, chol2inv(chol(-dQdbetaj2))) # -crossprod(dQ,solve(dQ2))
+        iter[j] = iter[j]+1
+      }
+    }
+  }
+
+  ww.mu.new = ww.mu.list
+  ww.Sigma.new = ww.Sigma.list
+
+  iter = array(0, dim = c(length(ww.mu.list), 1))
+  for (l in 1:length(ww.mu.list))
+  {
+    while (iter[l] < 1)
+    {
+      tl = t[[l]]
+      ww.mu.old = ww.mu.new[[l]]
+      ww.Sigma.old = ww.Sigma.new[[l]]
+
+      dQdmul = rep(0, length(ww.mu.new[[l]]))
+      dQdmul2 = rep(0, length(ww.mu.new[[l]]))
+      dQdsqrtSigmal = rep(0, length(ww.mu.new[[l]]))
+      dQdsqrtSigmal2 = rep(0, length(ww.mu.new[[l]]))
+
+      sqrtSigmal = sqrt(ww.Sigma.new[[l]])
+
+      for (nn.sim in 1:n.sims){
+        ww.list.sample <- as.list(rep(NA, length(ww.mu.list)))
+        for (l in 1:length(ww.mu.list)){
+          ww.list.sample[[l]] <- rmvnorm(1, mean = ww.mu.list[[l]], sigma = ww.Sigma.list[[l]])
+        }
+        W <- ProduceW(t, ww.list.sample)
+
+        # Recover standard normal sample
+        vl = (ww.list.sample[[l]] - ww.mu.new[[l]]) / sqrtSigmal ## look at this
+
+        gate.body = tcrossprod(X,alpha.new)+tcrossprod(W,beta.new)
+        pp = exp(gate.body-rowLogSumExps(gate.body))
+
+        dQdmul = dQdmul + (EMwwdQ(comp.zpzk, comp.zpzk.marg, pp, beta.new[,l], tl, ww.list.sample[[l]])  - ww.mu.new[[l]])
+        dQdmul2 = dQdmul2 + (EMwwdQ2(comp.zpzk.marg, pp, beta.new[,l], tl) - rep(1, length(ww.mu.new[[l]])))
+
+        dQdsqrtSigmal = dQdsqrtSigmal + (EMwwdQ(comp.zpzk, comp.zpzk.marg, pp, beta.new[,l], tl, ww.list.sample[[l]]) / vl + 1/sqrtSigmal - sqrtSigmal)
+        dQdsqrtSigmal2 = dQdsqrtSigmal2 + (EMwwdQ2(comp.zpzk.marg, pp, beta.new[,l], tl) / vl^2 - 1/sqrtSigmal^2 - rep(1, length(ww.mu.new[[l]])))
+      }
+      dQdmul = dQdmul / n.sims
+      dQdmul2 = dQdmul2 / n.sims
+      dQdsqrtSigmal = dQdsqrtSigmal / n.sims
+      dQdsqrtSigmal2 = dQdsqrtSigmal2 / n.sims
+
+      # Update mu
+      ww.mu.new[[l]] = ww.mu.new[[l]] - dQdmul / dQdmul2
+      # Update Sigma
+      sqrtSigmal = sqrtSigmal - dQdsqrtSigmal / dQdsqrtSigmal2
+      ww.Sigma.new[[l]] = sqrtSigmal^2
+      iter[l] = iter[l] + 1
+    }
+  }
+  return(list(alpha.new = alpha.new, beta.new = beta.new,
+              ww.mu.new = ww.mu.new, ww.Sigma.new = ww.Sigma.new))
+}
+
+
 #' ## Single Update for beta and ww jointly
 #' #' Single update in M-step for random effect coefficients \code{beta} and realization of random effects \code{ww}.
 #' #' Specific for j-th latent class and l-th random effect (suppressing subscripts below).
@@ -225,9 +401,7 @@ EMMbeta.random = function(X, alpha, W, beta, comp.zkz.e.list,
         pp = exp(gate.body-rowLogSumExps(gate.body))
         qqj = exp(rowLogSumExps(array(gate.body[,-j],dim=c(sample.size.n,n.comp-1)))-rowLogSumExps(gate.body))
         dQ = EMalphadQ(W, comp.zpzk[,j], comp.zpzk.marg, pp[,j]) - if(penalty){beta.new[j,]/hyper.beta^2} else{0}
-        # apply(sweep(X,1,comp.zpzk[,j]-comp.zpzk.marg*exp(gate.body[,j]-rowLogSumExps(gate.body)),FUN="*",check.margin=FALSE),2,sum)-if(penalty){alpha.new[j,]/hyper.alpha^2} else{0}
         dQ2 = EMalphadQ2(W, comp.zpzk.marg, pp[,j], qqj) - if(penalty){diag(1/hyper.beta^2,nrow = n.rand.l, ncol = n.rand.l)} else{diag(10^(-7),nrow = n.rand.l, ncol = n.rand.l)}
-        # -crossprod(sweep(X,1,comp.zpzk.marg*exp(rowLogSumExps(array(gate.body[,-j],dim=c(sample.size.n,n.comp-1)))+gate.body[,j]-2*rowLogSumExps(gate.body)),FUN="*",check.margin=FALSE),X)-if(penalty){diag(1/hyper.alpha^2,nrow = n.covar.p, ncol = n.covar.p)} else{diag(10^(-7),nrow = n.covar.p, ncol = n.covar.p)}
 
         beta.new[j,]=beta.new[j,] + crossprod(dQ, chol2inv(chol(-dQ2))) # -crossprod(dQ,solve(dQ2))
         iter[j] = iter[j]+1
@@ -238,64 +412,64 @@ EMMbeta.random = function(X, alpha, W, beta, comp.zkz.e.list,
   return(beta.new)
 }
 
-## With Random Effects, M-Step for ww
-#' ECM: M-Step for realization of random effects \code{ww}.
+#' ## With Random Effects, M-Step for ww
+#' #' ECM: M-Step for realization of random effects \code{ww}.
+#' #'
+#' #' @param X A N*P matrix of numerical covariates.
+#' #' @param alpha A g*P matrix of logit regression coefficients (from last iteration).
+#' #' @param t A list of L matrices, where matrix l is a N*Sl matrix of 0 and 1's,
+#' #'          indicating the known clustering of the observations with respect to the l-th random effect.
+#' #' @param ww A list of L vectors of old realization of random effects.
+#' #'           The l-th vector is of length Sl, representing the Sl clusters of the l-th random effect.
+#' #' @param beta A g*L matrix of random effect coefficients (from last iteration).
+#' #' @param sigma A vector of length L, where the l-th entry is the estimated standard deviation of the l-th random effect.
+#' #' @param comp.zkz.e.list An object returned by \code{EMEzkz}.
+#' #' @param ww.iter.max Numeric: maximum number of iterations.
+#' #'
+#' #' @return \code{ww.new} Updated realization of random effects.
+#' #'
+#' #' @importFrom matrixStats rowLogSumExps
+#' #'
+#' #' @keywords internal
+#' #'
+#' #' @export EMMww.random
+#' EMMww.random = function(X, alpha, t, ww, beta, sigma, comp.zkz.e.list, ww.iter.max)
+#' {
+#'   comp.zpzk = XPlusYColTimesZ(comp.zkz.e.list$z.e.obs, comp.zkz.e.list$z.e.lat, comp.zkz.e.list$k.e)
+#'   # comp.zkz.e.list$z.e.obs + sweep(comp.zkz.e.list$z.e.lat, 1, comp.zkz.e.list$k.e, FUN = "*", check.margin = FALSE)
 #'
-#' @param X A N*P matrix of numerical covariates.
-#' @param alpha A g*P matrix of logit regression coefficients (from last iteration).
-#' @param t A list of L matrices, where matrix l is a N*Sl matrix of 0 and 1's,
-#'          indicating the known clustering of the observations with respect to the l-th random effect.
-#' @param ww A list of L vectors of old realization of random effects.
-#'           The l-th vector is of length Sl, representing the Sl clusters of the l-th random effect.
-#' @param beta A g*L matrix of random effect coefficients (from last iteration).
-#' @param sigma A vector of length L, where the l-th entry is the estimated standard deviation of the l-th random effect.
-#' @param comp.zkz.e.list An object returned by \code{EMEzkz}.
-#' @param ww.iter.max Numeric: maximum number of iterations.
+#'   sample.size.n = nrow(X)
+#'   n.rand.l = length(ww)
+#'   n.comp = nrow(alpha)
+#'   iter = array(0, dim = c(n.rand.l, 1))
+#'   ww.new = ww
+#'   ww.old = ww
+#'   sigma.new = sigma
+#'   W.new = ProduceW(t, ww.new) # ProduceW from last iteration
+#'   comp.zpzk.marg = apply(comp.zkz.e.list$z.e.obs, 1, sum)
 #'
-#' @return \code{ww.new} Updated realization of random effects.
+#'   for (l in 1:n.rand.l)
+#'   {
+#'     tl = t[[l]]
+#'     ww.old[[l]] <- ww.new[[l]] - Inf
+#'     sigmal <- sigma.new[l]
 #'
-#' @importFrom matrixStats rowLogSumExps
+#'     while ((iter[l]<=ww.iter.max)&(sum((ww.old[[l]]-ww.new[[l]])^2)>10^(-8))) # Stopping criteria: (ww.iter.max) iterations, or small difference
+#'     {
+#'       ww.old[[l]] = ww.new[[l]] # keeping all other wwl's unchanged; keep track of last iteration
+#'       W.new[,l] = tl%*%ww.new[[l]] # minimal update to W: only changes the l-th column
+#'       gate.body = tcrossprod(X,alpha) + tcrossprod(W.new,beta)
+#'       pp = exp(gate.body-rowLogSumExps(gate.body))
+#'       dQ = EMwwdQ(comp.zpzk, pp, beta[,l], tl, ww.new[[l]], sigmal) # ww has no penalty; its prior has been included in the M-step
+#'       dQ2 = EMwwdQ2(pp, beta[,l], tl, sigmal)
 #'
-#' @keywords internal
-#'
-#' @export EMMww.random
-EMMww.random = function(X, alpha, t, ww, beta, sigma, comp.zkz.e.list, ww.iter.max)
-{
-  comp.zpzk = XPlusYColTimesZ(comp.zkz.e.list$z.e.obs, comp.zkz.e.list$z.e.lat, comp.zkz.e.list$k.e)
-  # comp.zkz.e.list$z.e.obs + sweep(comp.zkz.e.list$z.e.lat, 1, comp.zkz.e.list$k.e, FUN = "*", check.margin = FALSE)
-
-  sample.size.n = nrow(X)
-  n.rand.l = length(ww)
-  n.comp = nrow(alpha)
-  iter = array(0, dim = c(n.rand.l, 1))
-  ww.new = ww
-  ww.old = ww
-  sigma.new = sigma
-  W.new = ProduceW(t, ww.new) # ProduceW from last iteration
-  comp.zpzk.marg = apply(comp.zkz.e.list$z.e.obs, 1, sum)
-
-  for (l in 1:n.rand.l)
-  {
-    tl = t[[l]]
-    ww.old[[l]] <- ww.new[[l]] - Inf
-    sigmal <- sigma.new[l]
-
-    while ((iter[l]<=ww.iter.max)&(sum((ww.old[[l]]-ww.new[[l]])^2)>10^(-8))) # Stopping criteria: (ww.iter.max) iterations, or small difference
-    {
-      ww.old[[l]] = ww.new[[l]] # keeping all other wwl's unchanged; keep track of last iteration
-      W.new[,l] = tl%*%ww.new[[l]] # minimal update to W: only changes the l-th column
-      gate.body = tcrossprod(X,alpha) + tcrossprod(W.new,beta)
-      pp = exp(gate.body-rowLogSumExps(gate.body))
-      dQ = EMwwdQ(comp.zpzk, pp, beta[,l], tl, ww.new[[l]], sigmal) # ww has no penalty; its prior has been included in the M-step
-      dQ2 = EMwwdQ2(pp, beta[,l], tl, sigmal)
-
-      ww.new[[l]] = c(ww.new[[l]] + crossprod(dQ, chol2inv(chol(-dQ2)))) # latest
-      # ww.new[[l]] = c(ww.new[[l]] - crossprod(dQ, solve(dQ2)))
-      iter[l] = iter[l]+1
-    }
-  }
-  return(ww.new)
-}
+#'       ww.new[[l]] = c(ww.new[[l]] + crossprod(dQ, chol2inv(chol(-dQ2)))) # latest
+#'       # ww.new[[l]] = c(ww.new[[l]] - crossprod(dQ, solve(dQ2)))
+#'       iter[l] = iter[l]+1
+#'     }
+#'   }
+#'   return(ww.new)
+#' }
 
 
 #' @keywords internal
