@@ -185,6 +185,20 @@ FitMLRMoE = function(Y, X, t, alpha_init, beta_init, ww_mu_init, ww_Sigma_init, 
     beta_init[n.comp,] = 0
   }
 
+  if(is.null(ww_mu_init)){
+    ww_mu_init <- as.list(rep(NA, length(t)))
+    for(l in 1:length(t)){
+      ww_mu_init[[l]] <- rep(0, ncol(t[[l]]))
+    }
+  }
+
+  if(is.null(ww_Sigma_init)){
+    ww_Sigma_init <- as.list(rep(NA, length(t)))
+    for(l in 1:length(t)){
+      ww_Sigma_init[[l]] <- rep(1, ncol(t[[l]]))
+    }
+  }
+
   if(is.null(exposure)){
     exposure= rep(1, nrow(X))
     warning("No exposure provided. The default value exposure=1 is used for all observations.")

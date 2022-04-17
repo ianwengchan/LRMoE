@@ -116,7 +116,7 @@ EMMalphabetaww.VI = function(X, alpha, beta, t, comp.zkz.e.list,
       for (nn.sim in 1:n.sims){
         ww.list.sample <- as.list(rep(NA, length(ww.mu.list)))
         for (l in 1:length(ww.mu.list)){
-          ww.list.sample[[l]] <- rmvnorm(1, mean = ww.mu.list[[l]], sigma = ww.Sigma.list[[l]])
+          ww.list.sample[[l]] <- rnorm(length(ww.mu.list[[l]]), mean = ww.mu.list[[l]], sd = ww.Sigma.list[[l]])
         }
         W <- ProduceW(t, ww.list.sample)
 
@@ -152,7 +152,7 @@ EMMalphabetaww.VI = function(X, alpha, beta, t, comp.zkz.e.list,
         for (nn.sim in 1:n.sims){
           ww.list.sample <- as.list(rep(NA, length(ww.mu.list)))
           for (l in 1:length(ww.mu.list)){
-            ww.list.sample[[l]] <- rmvnorm(1, mean = ww.mu.list[[l]], sigma = ww.Sigma.list[[l]])
+            ww.list.sample[[l]] <- rnorm(length(ww.mu.list[[l]]), mean = ww.mu.list[[l]], sd = ww.Sigma.list[[l]])
           }
           W <- ProduceW(t, ww.list.sample)
 
@@ -194,7 +194,7 @@ EMMalphabetaww.VI = function(X, alpha, beta, t, comp.zkz.e.list,
       for (nn.sim in 1:n.sims){
         ww.list.sample <- as.list(rep(NA, length(ww.mu.list)))
         for (l in 1:length(ww.mu.list)){
-          ww.list.sample[[l]] <- rmvnorm(1, mean = ww.mu.list[[l]], sigma = ww.Sigma.list[[l]])
+          ww.list.sample[[l]] <- rnorm(length(ww.mu.list[[l]]), mean = ww.mu.list[[l]], sd = ww.Sigma.list[[l]])
         }
         W <- ProduceW(t, ww.list.sample)
 

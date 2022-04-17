@@ -45,7 +45,7 @@ LogitGatingSim = function(X, alpha, beta, t, ww.mu.list, ww.Sigma.list)
 {
   ww.list.sample <- as.list(rep(NA, length(ww.mu.list)))
   for (l in 1:length(ww.mu.list)){
-    ww.list.sample[[l]] <- mvtnorm::rmvnorm(1, mean = ww.mu.list[[l]], sigma = ww.Sigma.list[[l]])
+    ww.list.sample[[l]] <- rnorm(length(ww.mu.list[[l]]), mean = ww.mu.list[[l]], sd = ww.Sigma.list[[l]])
   }
   W <- ProduceW(t, ww.list.sample)
   gate.body=tcrossprod(X,alpha)+tcrossprod(W,beta)

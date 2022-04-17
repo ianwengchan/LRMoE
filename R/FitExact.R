@@ -127,10 +127,9 @@ FitExactRandom = function(Y, X, alpha.init, t, beta.init, model, n.sims = 10,
                           print_steps = TRUE)
 {
   # Initial likelihood
-  W = ProduceW(t, ww)
   ll_init_np = 0
   for (nn.sim in 1:n.sims){
-    gate_init = LogitGatingSim(X, alpha, beta, t, ww.mu.list, ww.Sigma.list)
+    gate_init = LogitGatingSim(X, alpha.init, beta.init, t, ww.mu.list, ww.Sigma.list)
     ll_np_list = LogLikelihoodExact(Y, gate_init, model, exposure)
     ll_init_np = ll_init_np + ll_np_list$ll
   }
